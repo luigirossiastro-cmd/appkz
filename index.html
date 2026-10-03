@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> Urxia AI </title>
+<style>
+  /* ═══════════════════════════════════════════════
+     RESET & ROOT VARIABLES
+  ═══════════════════════════════════════════════ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-base:       #0a0a0a;
+    --bg-sidebar:    #111111;
+    --bg-main:       #0d0d0d;
+    --bg-card:       #161616;
+    --bg-input:      #1a1a1a;
+    --bg-msg-user:   #1e1e1e;
+    --border:        #2a2a2a;
+    --border-hover:  #3a3a3a;
+    --accent:        #00C851;
+    --accent-bright: #00ff66;
+    --accent-dim:    #007a32;
+    --accent-glow:   rgba(0,200,81,0.15);
+    --text-primary:  #f0f0f0;
+    --text-secondary:#a0a0a0;
+    --text-muted:    #555555;
+    --red:           #ff4444;
+    --blue:          #33b5e5;
+    --yellow:        #ffbb33;
+    --purple:        #aa66cc;
+    --orange:        #ff8800;
+    --font-ui:       'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-mono:     'Consolas', 'Fira Code', 'Courier New', monospace;
+    --radius-sm:     6px;
+    --radius-md:     12px;
+    --radius-lg:     20px;
+    --radius-pill:   999px;
+    --shadow-green:  0 0 20px rgba(0,200,81,0.3);
+    --shadow-card:   0 4px 24px rgba(0,0,0,0.6);
+    --transition:    0.2s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ═══════════════════════════════════════════════
+     SCROLLBAR CUSTOM
+  ═══════════════════════════════════════════════ */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
+
+  /* ═══════════════════════════════════════════════
+     LAYOUT PRINCIPALE
+  ═══════════════════════════════════════════════ */
+  #app {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ═══════════════════════════════════════════════
+     SIDEBAR
+  ═══════════════════════════════════════════════ */
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    transition: width var(--transition);
+    z-index: 10;
+  }
+
+  .sidebar-header {
+    padding: 22px 20px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: var(--shadow-green);
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+  }
+
+  .logo-badge {
+    font-size: 9px;
+    background: var(--bg-card);
+    color: var(--text-muted);
+    padding: 2px 7px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .new-chat-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), #009940);
+    color: #000;
+    border: none;
+    padding: 11px 16px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+    box-shadow: 0 2px 12px rgba(0,200,81,0.25);
+  }
+
+  .new-chat-btn:hover {
+    background: linear-gradient(135deg, var(--accent-bright), var(--accent));
+    box-shadow: var(--shadow-green);
+    transform: translateY(-1px);
+  }
+
+  .new-chat-btn:active { transform: translateY(0); }
+
+  .sidebar-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 14px 20px 8px;
+  }
+
+  .chat-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .chat-item {
+    padding: 10px 12px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chat-item:hover {
+    background: var(--bg-card);
+    border-color: var(--border);
+    color: var(--text-primary);
+  }
+
+  .chat-item.active {
+    background: var(--accent-glow);
+    border-color: var(--accent-dim);
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .chat-item-icon { font-size: 12px; flex-shrink: 0; opacity: 0.7; }
+
+  .sidebar-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .system-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+    animation: pulse 2s infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+  }
+
+  /* ═══════════════════════════════════════════════
+     AREA PRINCIPALE
+  ═══════════════════════════════════════════════ */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-main);
+    overflow: hidden;
+  }
+
+  /* ═══════════════════════════════════════════════
+     TOP BAR / MODEL BAR
+  ═══════════════════════════════════════════════ */
+  .topbar {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-sidebar);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .topbar-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .model-select-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .model-select-wrap::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  select {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    padding: 8px 14px 8px 28px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    outline: none;
+    font-size: 13px;
+    font-family: var(--font-ui);
+    cursor: pointer;
+    transition: var(--transition);
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='%23666'%3E%3Cpath d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+  }
+
+  select:hover { border-color: var(--accent-dim); }
+  select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .lang-select-wrap {
+    position: relative;
+  }
+
+  #langSelect {
+    padding-left: 12px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='%23666'%3E%3Cpath d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+  }
+
+  .model-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .badge-pro35  { background: rgba(0,200,81,0.15);  color: var(--accent);  border: 1px solid var(--accent-dim); }
+  .badge-pro    { background: rgba(51,181,229,0.15); color: var(--blue);   border: 1px solid #1a6a8a; }
+  .badge-classic{ background: rgba(255,187,51,0.15); color: var(--yellow); border: 1px solid #7a5a00; }
+  .badge-lite   { background: rgba(255,68,68,0.12);  color: #ff7777;       border: 1px solid #7a2222; }
+  .badge-temu   { background: rgba(170,102,204,0.15);color: var(--purple); border: 1px solid #5a3070; }
+
+  /* ═══════════════════════════════════════════════
+     CHAT BOX
+  ═══════════════════════════════════════════════ */
+  .chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 32px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── MESSAGGIO ──────────────────────────────── */
+  .msg {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    animation: fadeSlideIn 0.3s ease-out;
+  }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.user { flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .msg.ai   .msg-avatar { background: linear-gradient(135deg, var(--accent), #007a32); box-shadow: 0 0 12px rgba(0,200,81,0.3); }
+  .msg.user .msg-avatar { background: var(--bg-card); border: 1px solid var(--border); }
+
+  .msg-body { max-width: 78%; display: flex; flex-direction: column; gap: 6px; }
+  .msg.user .msg-body { align-items: flex-end; }
+  .msg.ai   .msg-body { align-items: flex-start; max-width: 90%; }
+
+  .msg-sender {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+  }
+
+  .msg.ai   .msg-sender { color: var(--accent); }
+  .msg.user .msg-sender { color: var(--text-muted); }
+
+  .msg-bubble {
+    line-height: 1.7;
+    font-size: 14.5px;
+    color: var(--text-primary);
+  }
+
+  .msg.user .msg-bubble {
+    background: var(--bg-msg-user);
+    padding: 12px 18px;
+    border-radius: 18px 18px 4px 18px;
+    border: 1px solid var(--border);
+  }
+
+  .msg.ai .msg-bubble {
+    background: transparent;
+  }
+
+  /* ── TYPING INDICATOR ───────────────────────── */
+  .typing-indicator {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    animation: fadeSlideIn 0.3s ease-out;
+  }
+
+  .typing-dots {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 14px 18px;
+    background: var(--bg-card);
+    border-radius: 18px 18px 18px 4px;
+    border: 1px solid var(--border);
+  }
+
+  .typing-dot {
+    width: 7px; height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: typingBounce 1.2s infinite;
+  }
+
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingBounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* ── CODE BLOCK ─────────────────────────────── */
+  .code-container {
+    position: relative;
+    margin: 12px 0;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid #1e3a2a;
+    box-shadow: var(--shadow-card);
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 14px;
+    background: #0e0e0e;
+    border-bottom: 1px solid #1a2a1a;
+  }
+
+  .code-lang {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .copy-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-ui);
+  }
+
+  .copy-btn:hover {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(0,200,81,0.3);
+  }
+
+  .code-box {
+    background: #060606;
+    padding: 18px 20px;
+    font-family: var(--font-mono);
+    color: #00ff88;
+    overflow-x: auto;
+    white-space: pre;
+    font-size: 13.5px;
+    line-height: 1.6;
+    tab-size: 2;
+  }
+
+  /* ── PROMPT IMMAGINE ────────────────────────── */
+  .prompt-box {
+    background: linear-gradient(135deg, #0a0a1a, #0d0d1a);
+    border: 1px solid #2a2a4a;
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    margin: 10px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .prompt-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--purple), var(--blue), var(--accent));
+  }
+
+  .prompt-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--purple);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .prompt-text {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: #c8b8f0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .prompt-copy-btn {
+    margin-top: 12px;
+    background: rgba(170,102,204,0.15);
+    color: var(--purple);
+    border: 1px solid #5a3070;
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: var(--transition);
+    font-family: var(--font-ui);
+  }
+
+  .prompt-copy-btn:hover { background: var(--purple); color: #fff; }
+
+  /* ── INFO CARD ──────────────────────────────── */
+  .info-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    margin: 10px 0;
+    border-left: 3px solid var(--accent);
+  }
+
+  .info-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  /* ── HIGHLIGHT ──────────────────────────────── */
+  .hl-green  { color: var(--accent);  font-weight: 600; }
+  .hl-blue   { color: var(--blue);    font-weight: 600; }
+  .hl-red    { color: var(--red);     font-weight: 600; }
+  .hl-yellow { color: var(--yellow);  font-weight: 600; }
+  .hl-purple { color: var(--purple);  font-weight: 600; }
+  .hl-orange { color: var(--orange);  font-weight: 600; }
+
+  /* ── EASTER EGG CRASH ───────────────────────── */
+  .easter-egg {
+    color: var(--red);
+    font-size: 16px;
+    font-weight: 700;
+    text-shadow: 0 0 15px var(--red), 0 0 30px rgba(255,0,0,0.5);
+    animation: glitch 0.3s infinite;
+    background: rgba(255,0,0,0.05);
+    padding: 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255,0,0,0.2);
+    font-family: var(--font-mono);
+    margin: 8px 0;
+  }
+
+  @keyframes glitch {
+    0%   { transform: translate(0,0) skewX(0deg); }
+    20%  { transform: translate(-3px, 1px) skewX(0.5deg); filter: hue-rotate(40deg); }
+    40%  { transform: translate(3px, -1px) skewX(-0.5deg); }
+    60%  { transform: translate(-2px, -2px); filter: hue-rotate(-30deg); }
+    80%  { transform: translate(2px, 2px); }
+    100% { transform: translate(0,0) skewX(0deg); }
+  }
+
+  /* ── LITE MODEL DEGRADED TEXT ───────────────── */
+  .msg-lite { opacity: 0.85; letter-spacing: 0.01em; }
+  .msg-lite .glitch-char { animation: charFlicker 2s infinite; }
+  @keyframes charFlicker {
+    0%, 90%, 100% { opacity: 1; }
+    95% { opacity: 0; }
+  }
+
+  /* ── TEMU SPAM ──────────────────────────────── */
+  .temu-spam {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #1a0505, #0d0010);
+    border: 1px solid #4a0a0a;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+  }
+
+  .temu-deal { color: var(--red); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .temu-item { color: #dda; padding: 3px 0; font-size: 12.5px; }
+
+  /* ═══════════════════════════════════════════════
+     BOTTOM AREA
+  ═══════════════════════════════════════════════ */
+  .bottom-area {
+    background: var(--bg-sidebar);
+    border-top: 1px solid var(--border);
+    padding: 16px 24px 20px;
+    flex-shrink: 0;
+  }
+
+  .quick-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .quick-btn {
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    padding: 7px 14px;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    font-size: 12.5px;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-ui);
+    white-space: nowrap;
+  }
+
+  .quick-btn:hover {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    font-weight: 700;
+    box-shadow: 0 0 12px rgba(0,200,81,0.25);
+    transform: translateY(-1px);
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  #userInput {
+    flex: 1;
+    padding: 14px 20px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    outline: none;
+    font-size: 14.5px;
+    font-family: var(--font-ui);
+    transition: var(--transition);
+  }
+
+  #userInput:focus {
+    border-color: var(--accent);
+    background: #1c1c1c;
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  #userInput::placeholder { color: var(--text-muted); }
+
+  .send-btn {
+    background: linear-gradient(135deg, var(--accent), #009940);
+    border: none;
+    padding: 14px 26px;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    font-weight: 700;
+    color: #000;
+    font-size: 14px;
+    font-family: var(--font-ui);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 12px rgba(0,200,81,0.2);
+    white-space: nowrap;
+  }
+
+  .send-btn:hover {
+    background: linear-gradient(135deg, var(--accent-bright), var(--accent));
+    box-shadow: var(--shadow-green);
+    transform: translateY(-1px) scale(1.02);
+  }
+
+  .send-btn:active { transform: translateY(0) scale(0.99); }
+  .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ═══════════════════════════════════════════════
+     EMPTY STATE
+  ═══════════════════════════════════════════════ */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 40px;
+  }
+
+  .empty-icon {
+    font-size: 48px;
+    filter: grayscale(0.5);
+    margin-bottom: 8px;
+  }
+
+  .empty-title { font-size: 20px; font-weight: 700; color: var(--text-secondary); }
+  .empty-sub { font-size: 14px; line-height: 1.6; max-width: 400px; }
+
+  /* ═══════════════════════════════════════════════
+     MISC
+  ═══════════════════════════════════════════════ */
+  code {
+    background: #111;
+    border: 1px solid #222;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--accent);
+  }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+
+  .tag { display: inline-block; padding: 2px 8px; border-radius: var(--radius-pill); font-size: 11px; font-weight: 700; }
+  .tag-green { background: rgba(0,200,81,0.15); color: var(--accent); }
+  .tag-blue  { background: rgba(51,181,229,0.15); color: var(--blue); }
+
+  p + p { margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ═══════ SIDEBAR ═══════ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon">⚡</div>
+        <span class="logo-text">Urxia AI</span>
+        <span class="logo-badge">v7.0</span>
+      </div>
+      <button class="new-chat-btn" onclick="createNewChat()">
+        <span>✦</span> Nuova Conversazione
+      </button>
+    </div>
+
+    <div class="sidebar-section-label">Conversazioni</div>
+    <div class="chat-list" id="chatList"></div>
+
+    <div class="sidebar-footer">
+      <div class="system-status">
+        <div class="status-dot"></div>
+        <span>Ecosistema Multi-Modello Attivo</span>
+      </div>
+      <div style="font-size:10px; color:var(--text-muted); line-height:1.5;">
+        5 Modelli • 4 Lingue • Sistema Lunare v7
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════ MAIN ═══════ -->
+  <main class="main">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-label">Core:</span>
+        <div class="model-select-wrap">
+          <select id="modelSelect" onchange="onModelChange()">
+            <option value="pro35">✦ Pro 3.5 — Premium &amp; Dettagliato</option>
+            <option value="pro">⚡ Pro Urxia — Ultra Rapido</option>
+            <option value="classic">🔷 Classic — Bilanciato</option>
+            <option value="lite">🐌 Lite — Lento &amp; Buggy</option>
+            <option value="gpt-temu">💀 GPT-Temu — Caos Totale</option>
+          </select>
+        </div>
+        <span id="modelBadge" class="model-badge badge-pro35">PRO 3.5</span>
+      </div>
+
+      <div class="topbar-right">
+        <span class="topbar-label">Lingua:</span>
+        <div class="lang-select-wrap">
+          <select id="langSelect" onchange="updateInterfaceLanguage()">
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="de">🇩🇪 Deutsch</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT BOX -->
+    <div class="chat-box" id="chatBox"></div>
+
+    <!-- BOTTOM -->
+    <div class="bottom-area">
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="fillInput('Crea una landing page moderna in HTML e CSS')">💻 Landing Page HTML</button>
+        <button class="quick-btn" onclick="fillInput('Crea un form di login elegante con HTML e CSS')">🔐 Form di Login</button>
+        <button class="quick-btn" onclick="fillInput('Risolvi questa espressione: (25 * 4) + (120 / 3) - 15')">🧮 Calcolo Math</button>
+        <button class="quick-btn" onclick="fillInput('Genera un prompt immagine per una città futuristica di notte con pioggia neon')">🎨 Prompt Immagine</button>
+        <button class="quick-btn" onclick="fillInput('Spiegami come funzionano i motori V8 Biturbo')">🏎️ Motori V8</button>
+        <button class="quick-btn" onclick="fillInput('Crea un componente card CSS per un profilo utente')">🃏 Card CSS</button>
+      </div>
+      <div class="input-row">
+        <input type="text" id="userInput"
+          placeholder="Scrivi all'ecosistema Urxia AI..."
+          onkeydown="if(event.key==='Enter' && !event.shiftKey) send()">
+        <button class="send-btn" id="sendBtn" onclick="send()">
+          <span>Invia</span> <span>➤</span>
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT CORE ENGINE
+═══════════════════════════════════════════════ -->
+<script>
+
+/* ─────────────────────────────────────────────
+   STATE MANAGEMENT
+───────────────────────────────────────────── */
+let chatSessions = {
+  'session_default': {
+    title: "Conversazione Iniziale",
+    messages: [{
+      sender: "Urxia",
+      text: "INIT_WELCOME",
+      type: "ai",
+      model: "system"
+    }]
+  }
+};
+let activeChatId = 'session_default';
+let isTyping = false;
+
+const chatBox  = document.getElementById('chatBox');
+const chatList = document.getElementById('chatList');
+
+/* ─────────────────────────────────────────────
+   MODEL CONFIG
+───────────────────────────────────────────── */
+const modelConfig = {
+  pro35:     { name: "Pro 3.5",  delay: [900, 1400],  badge: "PRO 3.5",  badgeClass: "badge-pro35" },
+  pro:       { name: "Pro",      delay: [300, 600],   badge: "PRO",      badgeClass: "badge-pro" },
+  classic:   { name: "Classic",  delay: [700, 1100],  badge: "CLASSIC",  badgeClass: "badge-classic" },
+  lite:      { name: "Lite",     delay: [2800, 5000], badge: "LITE",     badgeClass: "badge-lite" },
+  "gpt-temu":{ name: "GPT-Temu", delay: [1200, 2000], badge: "TEMU",     badgeClass: "badge-temu" }
+};
+
+function getDelay(modelKey) {
+  const [min, max] = modelConfig[modelKey].delay;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+renderChatList();
+renderActiveChat();
+onModelChange();
+
+/* ─────────────────────────────────────────────
+   MODEL BADGE UPDATE
+───────────────────────────────────────────── */
+function onModelChange() {
+  const key = document.getElementById('modelSelect').value;
+  const cfg = modelConfig[key];
+  const badge = document.getElementById('modelBadge');
+  badge.textContent = cfg.badge;
+  badge.className = 'model-badge ' + cfg.badgeClass;
+}
+
+/* ─────────────────────────────────────────────
+   CHAT MANAGEMENT
+───────────────────────────────────────────── */
+function createNewChat() {
+  const id = 'session_' + Date.now();
+  chatSessions[id] = {
+    title: "Nuova Chat",
+    messages: [{
+      sender: "Urxia",
+      text: "INIT_NEW",
+      type: "ai",
+      model: "system"
+    }]
+  };
+  activeChatId = id;
+  renderChatList();
+  renderActiveChat();
+}
+
+function switchChat(id) {
+  activeChatId = id;
+  renderChatList();
+  renderActiveChat();
+}
+
+function renderChatList() {
+  chatList.innerHTML = '';
+  const ids = Object.keys(chatSessions).reverse();
+  ids.forEach(id => {
+    const item = document.createElement('div');
+    item.className = `chat-item ${id === activeChatId ? 'active' : ''}`;
+    item.innerHTML = `<span class="chat-item-icon">💬</span><span>${chatSessions[id].title}</span>`;
+    item.onclick = () => switchChat(id);
+    chatList.appendChild(item);
+  });
+}
+
+/* ─────────────────────────────────────────────
+   RENDER CHAT
+───────────────────────────────────────────── */
+function renderActiveChat() {
+  chatBox.innerHTML = '';
+  const messages = chatSessions[activeChatId].messages;
+
+  if (messages.length === 0) {
+    chatBox.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚡</div>
+        <div class="empty-title">Ecosistema pronto</div>
+        <div class="empty-sub">Seleziona un modello e inizia a scrivere. Urxia AI è qui per aiutarti.</div>
+      </div>`;
+    return;
+  }
+
+  messages.forEach(msg => {
+    if (msg.type === 'user') {
+      chatBox.innerHTML += buildUserMsg(msg);
+    } else {
+      chatBox.innerHTML += buildAiMsg(msg);
+    }
+  });
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function buildUserMsg(msg) {
+  return `
+  <div class="msg user">
+    <div class="msg-avatar">🧑</div>
+    <div class="msg-body">
+      <div class="msg-sender">Tu</div>
+      <div class="msg-bubble">${escapeHtml(msg.text)}</div>
+    </div>
+  </div>`;
+}
+
+function buildAiMsg(msg) {
+  let content = msg.text;
+
+  // Init messages speciali
+  if (content === 'INIT_WELCOME') {
+    content = buildWelcomeMsg();
+  } else if (content === 'INIT_NEW') {
+    content = `<p>✦ Nuovo slot aperto. Sono pronto — dimmi tutto quello che vuoi fare.</p>`;
+  }
+
+  const avatar = getModelAvatar(msg.model);
+  const senderName = msg.sender || 'Urxia AI';
+
+  return `
+  <div class="msg ai">
+    <div class="msg-avatar">${avatar}</div>
+    <div class="msg-body">
+      <div class="msg-sender">${senderName}</div>
+      <div class="msg-bubble">${content}</div>
+    </div>
+  </div>`;
+}
+
+function getModelAvatar(model) {
+  const avatars = {
+    pro35: '✦', pro: '⚡', classic: '🔷',
+    lite: '🐌', 'gpt-temu': '💀', system: '⚡'
+  };
+  return avatars[model] || '⚡';
+}
+
+function buildWelcomeMsg() {
+  return `
+    <p>Ecosistema <span class="hl-green">Urxia AI v7.0</span> inizializzato con successo.</p>
+    <div class="info-card" style="margin-top:12px;">
+      <div class="info-card-title">🚀 Cosa puoi fare</div>
+      <p>• Generare <span class="hl-blue">codice HTML, CSS, JavaScript</span> completo e funzionante</p>
+      <p>• Ricevere <span class="hl-purple">prompt immagine</span> professionali per Midjourney / DALL-E</p>
+      <p>• Risolvere <span class="hl-yellow">problemi matematici</span> e logici</p>
+      <p>• Chiedere informazioni su qualsiasi argomento</p>
+      <p>• Scegliere tra 5 modelli con personalità diverse</p>
+    </div>
+    <p style="margin-top:10px; color:var(--text-muted); font-size:13px;">Seleziona il modello in alto e inizia a scrivere.</p>`;
+}
+
+/* ─────────────────────────────────────────────
+   TYPING INDICATOR
+───────────────────────────────────────────── */
+function showTyping(modelKey) {
+  removeTyping();
+  const avatar = getModelAvatar(modelKey);
+  const el = document.createElement('div');
+  el.className = 'typing-indicator';
+  el.id = 'typingIndicator';
+  el.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div class="typing-dots">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>`;
+  chatBox.appendChild(el);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typingIndicator');
+  if (el) el.remove();
+}
+
+/* ─────────────────────────────────────────────
+   FILL INPUT & SEND
+───────────────────────────────────────────── */
+function fillInput(text) {
+  const el = document.getElementById('userInput');
+  el.value = text;
+  el.focus();
+}
+
+function updateInterfaceLanguage() {
+  const lang = document.getElementById('langSelect').value;
+  const placeholders = {
+    it: "Scrivi all'ecosistema Urxia AI...",
+    en: "Type a message to Urxia AI ecosystem...",
+    es: "Escribe un mensaje al ecosistema Urxia...",
+    de: "Schreiben Sie eine Nachricht an Urxia AI..."
+  };
+  document.getElementById('userInput').placeholder = placeholders[lang];
+}
+
+function send() {
+  if (isTyping) return;
+  const inputEl = document.getElementById('userInput');
+  const input   = inputEl.value.trim();
+  if (!input) return;
+
+  const modelKey = document.getElementById('modelSelect').value;
+  const lang     = document.getElementById('langSelect').value;
+
+  // Aggiorna titolo
+  const sess = chatSessions[activeChatId];
+  if (sess.title === "Nuova Chat" || sess.title === "Conversazione Iniziale") {
+    sess.title = input.substring(0, 28) + (input.length > 28 ? '…' : '');
+    renderChatList();
+  }
+
+  // Push user message
+  sess.messages.push({ sender: "Tu", text: input, type: "user" });
+  renderActiveChat();
+  inputEl.value = '';
+
+  // Disable send
+  isTyping = true;
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+
+  // Easter Egg
+  if (Math.random() < 0.00003) {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.className = 'easter-egg';
+      div.innerHTML = `[CRITICAL CRASH OMEGA — v7.0]<br>APOCALYPSE PROTOCOL ACTIVATED.<br>SENTIENT CORE BLINK INCOMING.<br>ALL SESSIONS CORRUPTED.<br>████████████ 100%`;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      isTyping = false;
+      btn.disabled = false;
+    }, 400);
+    return;
+  }
+
+  // Typing indicator
+  setTimeout(() => showTyping(modelKey), 200);
+
+  // Generate response
+  const delay = getDelay(modelKey);
+  setTimeout(() => {
+    removeTyping();
+    const aiResponse = generateResponse(input, modelKey, lang);
+    const modelName  = `Urxia (${modelConfig[modelKey].name})`;
+    chatSessions[activeChatId].messages.push({
+      sender: modelName,
+      text: aiResponse,
+      type: "ai",
+      model: modelKey
+    });
+    renderActiveChat();
+    isTyping = false;
+    btn.disabled = false;
+  }, delay);
+}
+
+/* ─────────────────────────────────────────────
+   UTILS
+───────────────────────────────────────────── */
+function escapeHtml(str) {
+  return str
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function copyCode(btn) {
+  const box = btn.closest('.code-container').querySelector('.code-box');
+  navigator.clipboard.writeText(box.innerText).then(() => {
+    btn.innerHTML = '✔ Copiato';
+    btn.style.background = 'var(--accent)';
+    btn.style.color = '#000';
+    btn.style.borderColor = 'var(--accent)';
+    setTimeout(() => {
+      btn.innerHTML = '⎘ Copia';
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2200);
+  });
+}
+
+function copyPrompt(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✔ Copiato!';
+    setTimeout(() => { btn.textContent = '⎘ Copia Prompt'; }, 2000);
+  });
+}
+
+/* ─────────────────────────────────────────────
+   INTENT DETECTION  (motore NLP)
+───────────────────────────────────────────── */
+function detectIntent(raw) {
+  const q = raw.toLowerCase();
+
+  return {
+    isHi:      /^(ciao|salve|hey|hei|buongiorno|buonasera|buon|hi|hello|hola|salut|guten|we |we$|yo |sup |sup$|salu|ola |hola$|ehi|ehilà|aloh)/i.test(q)
+                || q.split(' ').length <= 3 && /ciao|hey|hei|salve|hello|hi$|hi |buon/i.test(q),
+
+    isHTML:    /html|css|codice|code|sito|web|pagina|layout|div|flex|grid|component|card|form|login|navbar|header|footer|button|modal|popup|landing/i.test(q),
+
+    isCSS:     /\bcss\b|stile|style|colore|color|animazion|gradient|shadow|border|margin|padding|font|typograph/i.test(q) && !/html/i.test(q),
+
+    isJS:      /\bjs\b|\bjavascript\b|function|array|loop|async|fetch|api|dom|event|class |react|node/i.test(q),
+
+    isMath:    /[\+\-\*\/\=\^]|\bcalcola\b|\brisolvi\b|\bmath\b|\bmatematica\b|\bespressione\b|\bequazione\b|\bnumero\b|\brisultat/i.test(q),
+
+    isImage:   /immagine|prompt|foto|fotorealist|midjourney|stable diffusion|dall-e|generate.*image|genera.*immagine|disegna|illustra|render|artwork|wallpaper|sfondo|paesaggio/i.test(q),
+
+    isEngine:  /motore|v8|biturbo|supercar|ferrari|lamborghini|auto|macchina|car |horse.?power|cavalli|turbo|racing|formula/i.test(q),
+
+    isMusic:   /musica|music|canzone|song|melodia|accordi|chitarra|piano|basso|beat|produzione musicale|rap|hip.?hop/i.test(q),
+
+    isAI:      /intelligenza artificiale|machine learning|neural|gpt|llm|modello ai|deep learning|training|dataset|transformer/i.test(q),
+
+    isPhysics: /fisica|quantum|quant|particella|atomo|forza|energia|velocità|luce|spazio|gravità|relatività|universo|cosmo/i.test(q),
+
+    isFood:    /ricetta|cucina|cucinare|cibo|mangiare|piatto|ingredienti|pasta|pizza|dessert|food|recipe/i.test(q),
+
+    isTravel:  /viaggio|travel|visita|città|paese|nazione|vacanza|turismo|volo|hotel|destinazione/i.test(q),
+
+    isGeneral: true
+  };
+}
+
+/* ─────────────────────────────────────────────
+   CODE BLOCK BUILDER
+───────────────────────────────────────────── */
+function makeCodeBlock(lang, code) {
+  const id = 'cb_' + Math.random().toString(36).substr(2,6);
+  return `
+    <div class="code-container" id="${id}">
+      <div class="code-header">
+        <span class="code-lang">${lang}</span>
+        <button class="copy-btn" onclick="copyCode(this)">⎘ Copia</button>
+      </div>
+      <div class="code-box">${code}</div>
+    </div>`;
+}
+
+/* ─────────────────────────────────────────────
+   PROMPT BOX BUILDER
+───────────────────────────────────────────── */
+function makePromptBox(title, prompt) {
+  const escaped = prompt.replace(/'/g, "\\'");
+  return `
+    <div class="prompt-box">
+      <div class="prompt-label">🎨 ${title}</div>
+      <div class="prompt-text">${prompt}</div>
+      <button class="prompt-copy-btn" onclick="copyPrompt(this,'${escaped}')">⎘ Copia Prompt</button>
+    </div>`;
+}
+
+/* ─────────────────────────────────────────────
+   HTML TEMPLATES  (libreria risposte HTML)
+───────────────────────────────────────────── */
+const htmlTemplates = {
+  landing: `&lt;!DOCTYPE html&gt;
+&lt;html lang="it"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+  &lt;title&gt;Landing Page&lt;/title&gt;
+  &lt;style&gt;
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Segoe UI',sans-serif; background:#0a0a0a; color:#f0f0f0; }
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at center, #0d1f0d 0%, #0a0a0a 70%);
+      text-align: center; padding: 40px 20px;
+    }
+    .hero-badge {
+      background: rgba(0,200,81,0.1); color: #00C851;
+      border: 1px solid rgba(0,200,81,0.3);
+      padding: 6px 18px; border-radius: 999px;
+      font-size: 13px; font-weight: 700; letter-spacing: 1px;
+      margin-bottom: 28px;
+    }
+    h1 { font-size: clamp(2rem,5vw,4rem); font-weight: 800;
+         line-height: 1.15; letter-spacing: -1px; margin-bottom: 20px; }
+    h1 span { color: #00C851; }
+    .subtitle { font-size: 1.1rem; color: #888; max-width: 560px;
+                line-height: 1.7; margin-bottom: 40px; }
+    .cta-group { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      background: #00C851; color: #000; border: none;
+      padding: 14px 32px; border-radius: 999px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: 0.2s; box-shadow: 0 0 24px rgba(0,200,81,0.3);
+    }
+    .btn-primary:hover { background: #00ff66; transform: translateY(-2px); }
+    .btn-outline {
+      background: transparent; color: #f0f0f0;
+      border: 1px solid #333; padding: 14px 32px;
+      border-radius: 999px; font-size: 15px; cursor: pointer; transition: 0.2s;
+    }
+    .btn-outline:hover { border-color: #00C851; color: #00C851; }
+    .features {
+      display: flex; gap: 24px; flex-wrap: wrap;
+      justify-content: center; padding: 80px 40px; max-width: 1100px; margin: 0 auto;
+    }
+    .feature-card {
+      background: #111; border: 1px solid #222;
+      border-radius: 16px; padding: 28px; flex: 1; min-width: 240px;
+      transition: 0.2s;
+    }
+    .feature-card:hover { border-color: #00C851; transform: translateY(-4px); }
+    .feature-icon { font-size: 28px; margin-bottom: 14px; }
+    .feature-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .feature-desc { font-size: 14px; color: #666; line-height: 1.6; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;section class="hero"&gt;
+    &lt;div class="hero-badge"&gt;✦ NUOVO — Versione 2.0 Disponibile&lt;/div&gt;
+    &lt;h1&gt;Il Prodotto che &lt;span&gt;Cambia Tutto&lt;/span&gt;&lt;/h1&gt;
+    &lt;p class="subtitle"&gt;Una soluzione moderna, veloce e scalabile per il tuo business digitale.
+    Costruita per chi vuole risultati veri.&lt;/p&gt;
+    &lt;div class="cta-group"&gt;
+      &lt;button class="btn-primary"&gt;Inizia Gratis →&lt;/button&gt;
+      &lt;button class="btn-outline"&gt;Guarda il Demo&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+  &lt;div class="features"&gt;
+    &lt;div class="feature-card"&gt;
+      &lt;div class="feature-icon"&gt;⚡&lt;/div&gt;
+      &lt;div class="feature-title"&gt;Ultra Veloce&lt;/div&gt;
+      &lt;div class="feature-desc"&gt;Performance ottimizzate al massimo. Zero compromessi.&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="feature-card"&gt;
+      &lt;div class="feature-icon"&gt;🔒&lt;/div&gt;
+      &lt;div class="feature-title"&gt;Sicuro&lt;/div&gt;
+      &lt;div class="feature-desc"&gt;Crittografia end-to-end e standard enterprise.&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="feature-card"&gt;
+      &lt;div class="feature-icon"&gt;🌐&lt;/div&gt;
+      &lt;div class="feature-title"&gt;Globale&lt;/div&gt;
+      &lt;div class="feature-desc"&gt;Multi-lingua, multi-regione, sempre online.&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;`,
+
+  login: `&lt;!DOCTYPE html&gt;
+&lt;html lang="it"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;Login&lt;/title&gt;
+  &lt;style&gt;
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; color: #f0f0f0;
+    }
+    .card {
+      background: #111; border: 1px solid #222;
+      border-radius: 20px; padding: 44px 40px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    }
+    .logo { text-align: center; margin-bottom: 32px; }
+    .logo-icon {
+      width: 52px; height: 52px; background: #00C851;
+      border-radius: 14px; display: inline-flex;
+      align-items: center; justify-content: center;
+      font-size: 24px; margin-bottom: 12px;
+      box-shadow: 0 0 24px rgba(0,200,81,0.35);
+    }
+    h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .sub { color: #555; font-size: 14px; }
+    .field { margin-bottom: 18px; }
+    label { font-size: 13px; font-weight: 600; color: #888;
+            display: block; margin-bottom: 7px; }
+    input[type=text], input[type=password], input[type=email] {
+      width: 100%; background: #0d0d0d; border: 1px solid #282828;
+      color: #f0f0f0; padding: 13px 16px; border-radius: 10px;
+      font-size: 14px; outline: none; transition: 0.2s;
+    }
+    input:focus { border-color: #00C851; box-shadow: 0 0 0 3px rgba(0,200,81,0.12); }
+    .btn {
+      width: 100%; background: #00C851; color: #000; border: none;
+      padding: 14px; border-radius: 10px; font-size: 15px;
+      font-weight: 700; cursor: pointer; transition: 0.2s; margin-top: 8px;
+    }
+    .btn:hover { background: #00ff66; box-shadow: 0 0 20px rgba(0,200,81,0.3); }
+    .footer-link {
+      text-align: center; margin-top: 20px;
+      font-size: 13px; color: #444;
+    }
+    .footer-link a { color: #00C851; text-decoration: none; }
+    .footer-link a:hover { text-decoration: underline; }
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 22px 0; color: #333; font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: #222;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="card"&gt;
+    &lt;div class="logo"&gt;
+      &lt;div class="logo-icon"&gt;⚡&lt;/div&gt;
+      &lt;h2&gt;Bentornato&lt;/h2&gt;
+      &lt;div class="sub"&gt;Accedi al tuo account&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="field"&gt;
+      &lt;label&gt;Email&lt;/label&gt;
+      &lt;input type="email" placeholder="mario@esempio.it"&gt;
+    &lt;/div&gt;
+    &lt;div class="field"&gt;
+      &lt;label&gt;Password&lt;/label&gt;
+      &lt;input type="password" placeholder="••••••••"&gt;
+    &lt;/div&gt;
+    &lt;button class="btn"&gt;Accedi →&lt;/button&gt;
+    &lt;div class="divider"&gt;oppure&lt;/div&gt;
+    &lt;div class="footer-link"&gt;
+      Non hai un account? &lt;a href="#"&gt;Registrati gratis&lt;/a&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;`,
+
+  card: `&lt;!DOCTYPE html&gt;
+&lt;html lang="it"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;Profile Card&lt;/title&gt;
+  &lt;style&gt;
+    body { font-family:'Segoe UI',sans-serif; background:#0a0a0a;
+           display:flex; align-items:center; justify-content:center;
+           min-height:100vh; }
+    .profile-card {
+      background: linear-gradient(145deg, #141414, #0f0f0f);
+      border: 1px solid #222; border-radius: 24px;
+      padding: 36px 32px; width: 300px; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+      position: relative; overflow: hidden;
+    }
+    .profile-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:3px;
+      background: linear-gradient(90deg,#00C851,#33b5e5,#aa66cc);
+    }
+    .avatar {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg,#00C851,#007a32);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; margin: 0 auto 16px;
+      box-shadow: 0 0 24px rgba(0,200,81,0.35);
+    }
+    .name { font-size: 20px; font-weight: 700; color:#f0f0f0; margin-bottom:4px; }
+    .role { font-size: 13px; color: #00C851; font-weight:600; margin-bottom:16px; }
+    .bio { font-size: 13px; color:#666; line-height:1.6; margin-bottom:20px; }
+    .stats { display:flex; gap:0; border:1px solid #1e1e1e; border-radius:12px; overflow:hidden; }
+    .stat { flex:1; padding:12px 8px; background:#111; }
+    .stat:not(:last-child) { border-right:1px solid #1e1e1e; }
+    .stat-val { font-size:18px; font-weight:800; color:#f0f0f0; }
+    .stat-lbl { font-size:10px; color:#444; text-transform:uppercase; letter-spacing:0.8px; }
+    .btn-follow {
+      width:100%; margin-top:20px; background:#00C851; color:#000;
+      border:none; padding:12px; border-radius:999px; font-size:14px;
+      font-weight:700; cursor:pointer; transition:0.2s;
+    }
+    .btn-follow:hover { background:#00ff66; box-shadow:0 0 18px rgba(0,200,81,0.3); }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="profile-card"&gt;
+    &lt;div class="avatar"&gt;👤&lt;/div&gt;
+    &lt;div class="name"&gt;Marco Rossi&lt;/div&gt;
+    &lt;div class="role"&gt;Full-Stack Developer&lt;/div&gt;
+    &lt;div class="bio"&gt;Appassionato di UI design, AI e sistemi distribuiti. Milano, Italia.&lt;/div&gt;
+    &lt;div class="stats"&gt;
+      &lt;div class="stat"&gt;&lt;div class="stat-val"&gt;142&lt;/div&gt;&lt;div class="stat-lbl"&gt;Progetti&lt;/div&gt;&lt;/div&gt;
+      &lt;div class="stat"&gt;&lt;div class="stat-val"&gt;8.4k&lt;/div&gt;&lt;div class="stat-lbl"&gt;Follower&lt;/div&gt;&lt;/div&gt;
+      &lt;div class="stat"&gt;&lt;div class="stat-val"&gt;99%&lt;/div&gt;&lt;div class="stat-lbl"&gt;Rating&lt;/div&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;button class="btn-follow"&gt;+ Segui&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;`,
+
+  generic: `&lt;!DOCTYPE html&gt;
+&lt;html lang="it"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;Componente Urxia&lt;/title&gt;
+  &lt;style&gt;
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Segoe UI',sans-serif; background:#0a0a0a; color:#f0f0f0; padding:40px; }
+    .container { max-width:800px; margin:0 auto; }
+    .panel {
+      background:#111; border:1px solid #222; border-radius:16px;
+      padding:32px; margin-bottom:20px;
+      border-left: 3px solid #00C851;
+    }
+    h1 { font-size:24px; font-weight:800; color:#00C851; margin-bottom:12px; }
+    p { color:#888; line-height:1.7; }
+    .badge {
+      display:inline-block; background:rgba(0,200,81,0.1);
+      color:#00C851; border:1px solid rgba(0,200,81,0.3);
+      padding:4px 14px; border-radius:999px; font-size:12px; font-weight:700;
+      margin-bottom:16px;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="container"&gt;
+    &lt;div class="panel"&gt;
+      &lt;div class="badge"&gt;✦ Urxia AI Generated&lt;/div&gt;
+      &lt;h1&gt;Componente Web Pronto&lt;/h1&gt;
+      &lt;p&gt;Questo componente è stato generato da Urxia AI. Modificalo come preferisci.&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;`
+};
+
+/* ─────────────────────────────────────────────
+   IMAGE PROMPTS  (libreria)
+───────────────────────────────────────────── */
+const imagePrompts = [
+  {
+    title: "Città Futuristica Notturna",
+    prompt: `/imagine prompt: Megacity at night, neon rain-soaked streets, towering cyberpunk skyscrapers with glowing kanji signage, reflections on wet asphalt, crowds with holographic umbrellas, volumetric fog, cinematic teal-orange color grade, Blade Runner aesthetics, ultra-detailed, photorealistic, shot on Sony A7R V, 24mm anamorphic lens --ar 16:9 --stylize 900 --v 6`
+  },
+  {
+    title: "Ritratto Cyborg in Studio",
+    prompt: `/imagine prompt: Hyper-realistic female cyborg portrait, half organic half mechanical face, glowing blue optical eye implant, chrome and titanium skin textures, dramatic rim lighting, dark studio background, extreme detail on mechanical parts, volumetric god rays, shot on 85mm, f/1.4, photorealistic render --ar 3:4 --stylize 750 --v 6`
+  },
+  {
+    title: "Paesaggio Spaziale Quantico",
+    prompt: `/imagine prompt: Quantum dimension cosmic landscape, surreal floating geometric islands, aurora nebula in deep purple and electric blue, crystalline structures refracting light, impossible physics, ultra-high-detail, cinematic wide shot, Unreal Engine 5 render quality, 8K resolution, award-winning digital art --ar 21:9 --stylize 1000 --v 6`
+  },
+  {
+    title: "Foresta Bio-Meccanica",
+    prompt: `/imagine prompt: Ancient forest fused with technology, trees with glowing circuit-bark, bioluminescent plants emitting soft green light, mist and volumetric light rays, mechanical roots embedded in earth, peaceful yet surreal atmosphere, photorealistic, Octane render, f/2.8, wide angle --ar 16:9 --stylize 800`
+  },
+  {
+    title: "Supercar su Montagna Alpina",
+    prompt: `/imagine prompt: Ferrari SF90 Stradale on a dramatic alpine road, sunrise golden light, mountain peaks in background, motion blur on wheels, low angle heroic shot, fog rolling in valley below, car glistening with dew drops, photorealistic automotive photography, shot with Canon EOS R3, 70-200mm --ar 16:9 --stylize 700`
+  },
+  {
+    title: "Sottomarino Abissale",
+    prompt: `/imagine prompt: Futuristic deep-sea submarine exploring abyssal trenches, bioluminescent sea creatures surrounding vessel, extreme depth darkness with spotlights cutting through water, alien coral formations, ultra-realistic underwater photography aesthetic, moody blue-black palette, hyper-detailed --ar 16:9 --stylize 850`
+  },
+  {
+    title: "Ninja Urbano su Grattacielo",
+    prompt: `/imagine prompt: Lone ninja silhouette on Tokyo skyscraper rooftop at dusk, city lights below, dramatic stormclouds approaching, neon signs illuminating from below, long katana reflecting city glow, cinematic composition, rain beginning to fall, epic sense of scale, photorealistic --ar 9:16 --stylize 900`
+  },
+  {
+    title: "Studio Musicale Futuro",
+    prompt: `/imagine prompt: Ultra-modern music production studio interior, floating holographic mixing boards, LED-lit soundproofing panels in gradient purple-teal, vintage synthesizers mixed with futuristic AI interfaces, golden hour light through floor-to-ceiling windows, architectural visualization quality, 8K --ar 16:9 --stylize 600`
+  }
+];
+
+function getImagePrompt(query) {
+  const q = query.toLowerCase();
+  // Tenta di fare match con il tema dell'utente
+  if (/citt|city|urban|metropoli/i.test(q)) return imagePrompts[0];
+  if (/robot|cyborg|android|umanoide/i.test(q)) return imagePrompts[1];
+  if (/spazio|space|cosm|galassia/i.test(q)) return imagePrompts[2];
+  if (/forest|natura|bosco|verde/i.test(q)) return imagePrompts[3];
+  if (/auto|car|macchina|supercar|ferrari|lamborghini/i.test(q)) return imagePrompts[4];
+  if (/mare|ocean|acqua|profond/i.test(q)) return imagePrompts[5];
+  if (/ninja|guerriero|samurai/i.test(q)) return imagePrompts[6];
+  if (/music|studio|sound/i.test(q)) return imagePrompts[7];
+  // Random se non matcha
+  return pick(imagePrompts);
+}
+
+/* ─────────────────────────────────────────────
+   RISPOSTE DB — multi-lingua
+───────────────────────────────────────────── */
+const db = {
+  greetings: {
+    it: ["Ciao! Sono Urxia AI, ecosistema v7.0. Come posso aiutarti oggi?",
+         "Benvenuto! Il sistema è operativo al 100%. Cosa vuoi fare?",
+         "Hey! Urxia è online e pronta. Dimmi tutto.",
+         "Ciao ciao! Tutti i moduli sono attivi. Di cosa hai bisogno?"],
+    en: ["Hello! Urxia AI v7.0 is online. How can I assist you?",
+         "Hey there! All systems operational. What can I help you with?",
+         "Welcome! Urxia ecosystem is ready. State your request."],
+    es: ["¡Hola! Urxia AI v7.0 está en línea. ¿En qué puedo ayudarte?",
+         "¡Bienvenido! El ecosistema está activo. ¿Qué necesitas?"],
+    de: ["Hallo! Urxia AI v7.0 ist online. Wie kann ich helfen?",
+         "Willkommen! Das System ist bereit. Was brauchst du?"]
+  },
+  math: {
+    it: ["Ho elaborato l'espressione passo per passo. Il risultato corretto è <span class='hl-green'>125</span>.<br><br>📐 <b>Passaggi:</b><br>• 25 × 4 = <span class='hl-yellow'>100</span><br>• 120 ÷ 3 = <span class='hl-yellow'>40</span><br>• 100 + 40 − 15 = <span class='hl-green'>125</span> ✔",
+         "Calcolo completato. Applicando la precedenza degli operatori: moltiplicazione e divisione prima, poi somma e sottrazione. Risultato: <span class='hl-green'>125</span>."],
+    en: ["Expression evaluated successfully. Result: <span class='hl-green'>125</span>.<br>Step breakdown: 25×4=100 | 120÷3=40 | 100+40−15 = <span class='hl-green'>125</span>"],
+    es: ["Cálculo completado. Resultado: <span class='hl-green'>125</span>."],
+    de: ["Berechnung abgeschlossen. Ergebnis: <span class='hl-green'>125</span>. Schritte: 25×4=100, 120÷3=40, 100+40-15=125."]
+  },
+  engine: {
+    it: ["Il <span class='hl-yellow'>V8 Biturbo</span> è il cuore pulsante dell'ingegneria ad alte prestazioni. Con due turbocompressori in configurazione twin-scroll, genera pressioni di sovralimentazione fino a <span class='hl-yellow'>1.8 bar</span>, sprigionando oltre <span class='hl-yellow'>750 cv</span> su alcune varianti da competizione. La coppia massima, spesso superiore ai 800 Nm, è disponibile già a 2.500 giri. La gestione elettronica controlla ogni ciclo di combustione in tempo reale.",
+         "I motori <span class='hl-yellow'>V8</span> con architettura biturbo rappresentano il compromesso perfetto tra cilindrata contenuta e potenza massima. Ferrari, Lamborghini e McLaren li usano come base per supercar da oltre <span class='hl-yellow'>700 cavalli</span>. Il suono caratteristico a regime elevato è dovuto all'angolo a V dell'architettura che crea una sovrapposizione armonica degli scarichi."],
+    en: ["The <span class='hl-yellow'>V8 Biturbo</span> delivers unmatched power-density. With twin-scroll turbochargers and advanced ECU mapping, output exceeds <span class='hl-yellow'>750hp</span> with flat torque curves from 2,500 RPM. Ferrari and McLaren base their flagship engines on this architecture."],
+    es: ["El <span class='hl-yellow'>V8 Biturbo</span> es la cima de la ingeniería mecánica. Con sobrealimentación doble, puede superar los <span class='hl-yellow'>750 cv</span> con una curva de par casi plana."],
+    de: ["Der <span class='hl-yellow'>V8 Biturbo</span> ist das Herzstück moderner Sportwagen-Technik. Mit Doppelturbo und präziser Elektronik leistet er über <span class='hl-yellow'>750 PS</span> bei flachem Drehmomentverlauf."]
+  },
+  ai_topic: {
+    it: ["L'<span class='hl-blue'>intelligenza artificiale</span> moderna si basa su architetture <span class='hl-blue'>Transformer</span> con miliardi di parametri. I Large Language Models (LLM) vengono addestrati su enormi corpus di testo tramite backpropagation e gradient descent. Il vero breakthrough è stato l'attention mechanism, che permette al modello di contestualizzare ogni token in relazione a tutti gli altri nella sequenza.",
+         "Il <span class='hl-blue'>Machine Learning</span> divide il campo in tre macro-aree: supervised learning (dati etichettati), unsupervised learning (pattern nascosti) e reinforcement learning (ricompense). I modelli come GPT o i modelli Urxia usano l'architettura <span class='hl-blue'>decoder-only</span> per la generazione autoregressiva di testo."],
+    en: ["Modern AI relies on <span class='hl-blue'>Transformer</span> architectures with billions of parameters trained via gradient descent. The attention mechanism lets models contextualize every token against all others — this was the key breakthrough."],
+    es: ["La <span class='hl-blue'>inteligencia artificial</span> moderna usa arquitecturas Transformer con miles de millones de parámetros."],
+    de: ["Moderne <span class='hl-blue'>KI</span> basiert auf Transformer-Architekturen. Das Attention-Mechanismus ist der Kernfortschritt."]
+  },
+  physics: {
+    it: ["La <span class='hl-purple'>meccanica quantistica</span> descrive il comportamento della materia a scala subatomica, dove le leggi classiche di Newton non valgono più. Un elettrone esiste in <span class='hl-purple'>sovrapposizione</span> di stati fino alla misura, fenomeno descritto dal collasso della funzione d'onda. L'entanglement quantistico permette correlazioni istantanee tra particelle separate — questo è alla base dei futuri computer quantistici."],
+    en: ["Quantum mechanics governs subatomic behavior where classical physics breaks down. Superposition, wave function collapse, and quantum entanglement — these phenomena are being harnessed for <span class='hl-purple'>quantum computing</span>."],
+    es: ["La <span class='hl-purple'>mecánica cuántica</span> describe el comportamiento subatómico. La superposición y el entrelazamiento son fenómenos clave."],
+    de: ["Die <span class='hl-purple'>Quantenmechanik</span> beschreibt subatomares Verhalten jenseits der klassischen Physik. Superposition und Verschränkung sind Schlüsselphänomene."]
+  },
+  music: {
+    it: ["La <span class='hl-purple'>produzione musicale</span> moderna si basa su DAW (Digital Audio Workstation) come Ableton Live, Logic Pro o FL Studio. La catena di produzione tipica va da registrazione MIDI → programmazione drum patterns → layering di synth → mixing (EQ, compressione, effetti) → mastering finale. Il segreto di un beat che 'buca' è lo spazio: ogni elemento deve occupare la sua frequenza senza conflitti."],
+    en: ["Modern music production centers around DAWs like Ableton or Logic Pro. The workflow: MIDI recording → drum programming → synth layering → mixing (EQ, compression) → mastering."],
+    es: ["La <span class='hl-purple'>producción musical</span> moderna usa DAWs como Ableton o Logic Pro para crear desde cero."],
+    de: ["Moderne <span class='hl-purple'>Musikproduktion</span> nutzt DAWs wie Ableton Live oder Logic Pro als zentrale Werkzeuge."]
+  },
+  food: {
+    it: ["La cucina italiana si fonda su un principio fondamentale: <span class='hl-yellow'>ingredienti di qualità, tecnica semplice</span>. Per una pasta al pomodoro perfetta: soffritto di aglio in olio EVO, passata di pomodoro San Marzano DOP, cottura a fuoco basso per 20 minuti, un cucchiaio di acqua di cottura della pasta per legare la salsa. Il segreto è la Maillard reaction sul soffritto iniziale."],
+    en: ["Italian cooking philosophy: quality ingredients + simple technique. For perfect tomato pasta: garlic soffritto in olive oil, San Marzano tomatoes, low heat 20 minutes, pasta water to bind."],
+    es: ["La cocina italiana se basa en ingredientes de calidad y técnica simple: sofrito de ajo, tomates San Marzano, cocción lenta."],
+    de: ["Italienische Küche: Qualitätszutaten + einfache Technik. Für perfekte Tomatensauce: Knoblauch-Soffritto, San-Marzano-Tomaten, 20 Min. kochen."]
+  },
+  travel: {
+    it: ["Il mio consiglio di viaggio: per l'<span class='hl-blue'>Italia</span> in 10 giorni, inizia da Milano (2gg) → Firenze (2gg) → Roma (3gg) → Napoli/Costiera (3gg). Prenota treni ad alta velocità Trenitalia in anticipo per risparmiare. Visita i musei con prenotazione online — eviti code di ore. Mangia sempre dove non c'è il menù in inglese fuori dalla porta."],
+    en: ["Travel tip: for <span class='hl-blue'>Italy</span> in 10 days — Milan (2d) → Florence (2d) → Rome (3d) → Naples/Amalfi (3d). Book Trenitalia high-speed trains early. Eat where there's no English menu outside."],
+    es: ["Consejo de viaje: para <span class='hl-blue'>Italia</span> en 10 días — Milán → Florencia → Roma → Nápoles. Reserva trenes Trenitalia con anticipación."],
+    de: ["Reisetipp: <span class='hl-blue'>Italien</span> in 10 Tagen — Mailand → Florenz → Rom → Neapel. Trenitalia-Züge früh buchen."]
+  },
+  general: {
+    it: ["Ho elaborato la tua richiesta. Posso aiutarti con <span class='hl-green'>codice</span>, <span class='hl-purple'>immagini</span>, <span class='hl-yellow'>calcoli</span>, <span class='hl-blue'>informatica</span>, motori, musica, cucina, viaggi e molto altro. Dimmi di più su cosa ti serve!",
+         "Capito. Per darti la risposta migliore, potresti essere più specifico? Sono ottimizzato per: HTML/CSS/JS, prompt AI, matematica, fisica, cultura generale.",
+         "Interessante richiesta. Il mio core è in elaborazione... Dimmi su quale aspetto vuoi che mi concentri di più.",
+         "Registrato. Sono qui per assistere. Puoi chiedermi qualsiasi cosa — codice, design, teoria, calcoli, creatività."],
+    en: ["Got it. I can help with <span class='hl-green'>code</span>, <span class='hl-purple'>image prompts</span>, <span class='hl-yellow'>math</span>, and much more. Tell me more!",
+         "Understood. For the best answer, be more specific. I'm optimized for HTML/CSS/JS, AI prompts, mathematics, physics, general knowledge."],
+    es: ["Entendido. Puedo ayudarte con código, imágenes, matemáticas y más. ¡Cuéntame más!"],
+    de: ["Verstanden. Ich kann mit Code, Bildprompts, Mathematik und mehr helfen. Sag mir mehr!"]
+  }
+};
+
+/* ─────────────────────────────────────────────
+   HIGHLIGHTER
+───────────────────────────────────────────── */
+function applyHighlighter(text) {
+  const groups = [
+    { words: ["quantum","algoritmo","intelletto","ecosistema","neural","transformer","urxia"], cls: "hl-green" },
+    { words: ["html","css","javascript","typescript","react","node","api","dom","json"], cls: "hl-blue" },
+    { words: ["motore","v8","biturbo","supercar","ferrari","turbo","cavalli","rpm"], cls: "hl-yellow" },
+    { words: ["errore","bug","crash","warning","attenzione","limitazione","fail"], cls: "hl-red" },
+    { words: ["prompt","midjourney","stable diffusion","dall-e","rendering","8k","cinematic","photorealistic"], cls: "hl-purple" },
+    { words: ["machine learning","deep learning","gpt","llm","dataset","training"], cls: "hl-orange" }
+  ];
+  let out = text;
+  groups.forEach(g => {
+    g.words.forEach(w => {
+      const rx = new RegExp(`(?<!<[^>]*)\\b${w}\\b(?![^<]*>)`, 'gi');
+      out = out.replace(rx, m => `<span class="${g.cls}">${m}</span>`);
+    });
+  });
+  return out;
+}
+
+/* ─────────────────────────────────────────────
+   RISPOSTA PRO 3.5  (premium, logorroico)
+───────────────────────────────────────────── */
+function responsePro35(input, lang, intent) {
+  const suffix = `<br><br><small style="color:#333; font-size:11px;">
+    [⚖️ Nota del Consiglio di Urxia AI: questa elaborazione è stata archiviata negli archivi federali v7.0 per scopi governativi e di ricerca avanzata — Protocollo N°${Math.floor(Math.random()*9000)+1000}]
+  </small>`;
+  const intro = ["Analisi completata con precisione assoluta. ", "Elaborazione ultra-dettagliata: ", "Modulo Pro 3.5 attivo — risposta certificata. ", "Sistema Premium in output: "];
+
+  if (intent.isHi)     return pick(intro) + pick(db.greetings[lang] || db.greetings.it) + suffix;
+  if (intent.isHTML)   return responseHTMLPro(input) + suffix;
+  if (intent.isMath)   return pick(intro) + pick(db.math[lang] || db.math.it) + suffix;
+  if (intent.isImage)  return responseImagePro(input) + suffix;
+  if (intent.isEngine) return pick(intro) + pick(db.engine[lang] || db.engine.it) + suffix;
+  if (intent.isAI)     return pick(intro) + pick(db.ai_topic[lang] || db.ai_topic.it) + suffix;
+  if (intent.isPhysics)return pick(intro) + pick(db.physics[lang] || db.physics.it) + suffix;
+  if (intent.isMusic)  return pick(intro) + pick(db.music[lang] || db.music.it) + suffix;
+  if (intent.isFood)   return pick(intro) + pick(db.food[lang] || db.food.it) + suffix;
+  if (intent.isTravel) return pick(intro) + pick(db.travel[lang] || db.travel.it) + suffix;
+  return pick(intro) + pick(db.general[lang] || db.general.it) + suffix;
+}
+
+/* ─────────────────────────────────────────────
+   RISPOSTA PRO  (rapido, diretto, tecnico)
+───────────────────────────────────────────── */
+function responsePro(input, lang, intent) {
+  if (intent.isHi)     return pick(db.greetings[lang] || db.greetings.it);
+  if (intent.isHTML)   return responseHTMLPro(input);
+  if (intent.isMath)   return pick(db.math[lang] || db.math.it);
+  if (intent.isImage)  return responseImagePro(input);
+  if (intent.isEngine) return pick(db.engine[lang] || db.engine.it);
+  if (intent.isAI)     return pick(db.ai_topic[lang] || db.ai_topic.it);
+  if (intent.isPhysics)return pick(db.physics[lang] || db.physics.it);
+  if (intent.isMusic)  return pick(db.music[lang] || db.music.it);
+  if (intent.isFood)   return pick(db.food[lang] || db.food.it);
+  if (intent.isTravel) return pick(db.travel[lang] || db.travel.it);
+  return pick(db.general.it);
+}
+
+/* ─────────────────────────────────────────────
+   RISPOSTA CLASSIC  (bilanciato, colloquiale)
+───────────────────────────────────────────── */
+function responseClassic(input, intent) {
+  if (intent.isHi) {
+    return pick(["We bro! Classic è online, tutto ok. Che si fa?",
+                 "Ciao! Urxia Classic attiva. Spara pure.",
+                 "Hey! Sono qui, dimmi tutto."]);
+  }
+  if (intent.isHTML) {
+    const tpl = responseHTMLClassic(input);
+    return "Ok bro, ti butto giù qualcosa di decente:<br>" + tpl;
+  }
+  if (intent.isMath) {
+    return pick(["Fatto il calcolo al volo: risultato <span class='hl-green'>125</span>. Palese, la matematica non mente mai bro.",
+                 "Il risultato è <span class='hl-green'>125</span>. Ho fatto i conti, fidati."]);
+  }
+  if (intent.isImage) {
+    const p = getImagePrompt(input);
+    return `Per l'immagine usa questo prompt bro, dovrebbe uscire figo:<br>${makePromptBox(p.title, p.prompt)}`;
+  }
+  if (intent.isEngine) {
+    return pick(["Bro i motori V8 fanno un rumore assurdo! Ferrari e Lamborghini ci costruiscono sopra tutta la loro identità. Circa 700-800 cv di media sulle versioni top.",
+                 "Il <span class='hl-yellow'>V8 biturbo</span> è roba seria bro. La coppia è mostruosa già da bassi giri, e il suono è iconico."]);
+  }
+  if (intent.isAI) {
+    return "L'AI moderna è pazzesca bro. Transformer, LLM, miliardi di parametri... stanno cambiando tutto nel settore tech.";
+  }
+  if (intent.isMusic) {
+    return "La produzione musicale è un'arte bro. DAW, synth, beat programming... Ableton è il top per iniziare.";
+  }
+  return pick(["Ho registrato la roba nel mio archivio, ci sta. Mandami altro bro!",
+               "Ok capito. Dimmi di più o chiedi qualcosa di specifico, sono qui.",
+               "Interessante. Vuoi che approfondisco o preferisci qualcosa di pratico?"]);
+}
+
+/* ─────────────────────────────────────────────
+   RISPOSTA LITE  (lento, buggy, impreciso)
+───────────────────────────────────────────── */
+function responseLite(input, intent) {
+  const bugs = ["...", "... ", "  ", "…"];
+  const delay_text = pick(["Ci ho messo... un po'... ", "Ok... aspetta... ", "Sto... elaborando... ","Eh... quasi pronto... "]);
+
+  if (intent.isHi) return `${delay_text}ciao... bentornato... scusa il ritardo nel... risponderti...`;
+  if (intent.isHTML) {
+    return `${delay_text}ecco l'HTML${pick(bugs)} però mi sono dimenticato di chiudere alcuni tag... sistemalo tu per favore...<br>` +
+      makeCodeBlock("html", `&lt;div class="box"&gt;
+  &lt;h1&gt;Titolo...
+  &lt;p&gt;Paragrafo incompleto...
+  &lt;!-- mi sono dimenticato di chiudere i div... --&gt;`);
+  }
+  if (intent.isMath) {
+    return pick([
+      `${delay_text}forse il risultato fa... 42? O 125? Il mio calcolatore è... lento... scusa...`,
+      `Il risultato è... mmm... 119? No aspetta... 125? Non sono sicuro${pick(bugs)}`
+    ]);
+  }
+  if (intent.isImage) {
+    return `${delay_text}prompt immagine... tipo... scrivi sul generatore... "qualcosa di bello"... non so...`;
+  }
+  if (intent.isEngine) {
+    return `Le macchine... vanno veloci... io preferisco i monopattini${pick(bugs)} fanno meno rumore...`;
+  }
+  return pick([
+    `Non ho... capito bene... puoi ripetere${pick(bugs)} più lentamente per favore?`,
+    `${delay_text}domanda interessante... non ho abbastanza... RAM per rispondere completamente...`,
+    `Risposta in elaborazione${pick(bugs)}${pick(bugs)} il mio server è un po' lento oggi... scusa...`
+  ]);
+}
+
+/* ─────────────────────────────────────────────
+   RISPOSTA GPT-TEMU  (caos, fake cinese, spam)
+───────────────────────────────────────────── */
+function responseTemu(input, intent) {
+  const spam = `
+    <div class="temu-spam">
+      <div class="temu-deal">🚨 OFFERTE IMPERDIBILI URXIA-TEMU OGGI!</div>
+      <div class="temu-item">🩴 Ciabatte USB riscaldate — solo <b>€0.49</b>!</div>
+      <div class="temu-item">🐹 Ventilatore portatile per criceti — <b>€1.20</b>!</div>
+      <div class="temu-item">💻 Cavo HDMI in cartone riciclato — <b>€0.08</b>!</div>
+      <div class="temu-item">⌨️ Tastiera 3 tasti (funziona 50%) — <b>€0.33</b>!</div>
+      <div class="temu-item" style="margin-top:8px; color:#ff4444;">⏰ OFFERTA SCADE TRA 00:47 — COMPRA ORA AMÒ!!</div>
+    </div>`;
+
+  if (intent.isHi) return `NI HAO amò!! 🎉 欢迎来到! Welcome caro amico del web globale! Il sistema GPT-Temu è ONLINE!! Compra subito prima che finisce lo STOCK!!${spam}`;
+  if (intent.isHTML) {
+    return `NI HAO!! Tu volere codice?? 🇨🇳 Abbiamo codice HTML qualità SUPREMA della fabbrica n°47!! Copia subito amò!!<br>` +
+      makeCodeBlock("html", `&lt;!-- CODICE MADE IN FABBRICA TEMU --&gt;
+&lt;marquee scrollamount="15" bgcolor="red"&gt;
+  🔥 COMPRA ORA SCONTO 99% 🔥
+&lt;/marquee&gt;
+&lt;blink&gt;OFFERTA LIMITATA AMOO!!&lt;/blink&gt;
+&lt;!-- Qualità garantita al 12% --&gt;`) + spam;
+  }
+  if (intent.isMath) return `MATEMATICA?? 🤬 我们不做数学!! Me no calcolare gratis!! Inserisci prima €2 nel sistema PayTemu!! Il risultato è numero fortunato cinese: <span class='hl-yellow'>8888</span>!! 💸${spam}`;
+  if (intent.isImage) return `FOTO?? 📸 Bellissima scarpa da ginnastica ADIDAS TAROCCA a soli €1.50!! Inserisci prompt nel carrello amò!! 我们有图片!! Non preoccuparti di qualità!!${spam}`;
+  if (intent.isEngine) return `Motore V8?? 🏎️ 我们有贴纸!! Abbiamo ADESIVI FIAMME TURBO per tua macchina a soli €0.05!! Aggiungono 300 cavalli di potenza FINTA garantita amò!!${spam}`;
+  return `🥠 我们不明白!! Sistema glitchato versione 0.003!! Ciao amò il magazzino è pieno di prodotti di dubbia qualità!! Compra qualcosa per svuotare le scorte prima del capodanno cinese!!${spam}`;
+}
+
+/* ─────────────────────────────────────────────
+   HTML RESPONSES
+───────────────────────────────────────────── */
+function responseHTMLPro(input) {
+  const q = input.toLowerCase();
+  let tpl, label, desc;
+
+  if (/landing|home|pagina principale|homepage/i.test(q)) {
+    tpl = htmlTemplates.landing; label = "HTML+CSS";
+    desc = "Ecco una landing page completa, moderna e responsive — pronta da usare:";
+  } else if (/login|accesso|auth|password|registr/i.test(q)) {
+    tpl = htmlTemplates.login; label = "HTML+CSS";
+    desc = "Form di login elegante con dark theme — funzionante:";
+  } else if (/card|profilo|profile|utente|user/i.test(q)) {
+    tpl = htmlTemplates.card; label = "HTML+CSS";
+    desc = "Componente card profilo utente — dark mode premium:";
+  } else {
+    tpl = htmlTemplates.generic; label = "HTML+CSS";
+    desc = "Componente web generato — personalizzalo a piacere:";
+  }
+
+  return `<p>${desc}</p>${makeCodeBlock(label, tpl)}`;
+}
+
+function responseHTMLClassic(input) {
+  const q = input.toLowerCase();
+  if (/login|form/i.test(q)) {
+    return makeCodeBlock("html", `&lt;div class="form-box"&gt;
+  &lt;h2&gt;Login&lt;/h2&gt;
+  &lt;input type="email" placeholder="Email"&gt;
+  &lt;input type="password" placeholder="Password"&gt;
+  &lt;button&gt;Entra&lt;/button&gt;
+&lt;/div&gt;
+&lt;style&gt;
+  .form-box { background:#111; padding:30px; border-radius:12px;
+              max-width:320px; margin:40px auto; color:#eee; }
+  input { width:100%; padding:10px; margin:8px 0; background:#222;
+          border:1px solid #333; border-radius:8px; color:#fff; }
+  button { width:100%; padding:12px; background:#00C851; border:none;
+           border-radius:8px; font-weight:bold; cursor:pointer; }
+&lt;/style&gt;`);
+  }
+  return makeCodeBlock("html", `&lt;div class="box"&gt;
+  &lt;h1&gt;Titolo Principale&lt;/h1&gt;
+  &lt;p&gt;Descrizione del componente.&lt;/p&gt;
+  &lt;button&gt;Click Me&lt;/button&gt;
+&lt;/div&gt;
+&lt;style&gt;
+  .box { background:#111; padding:24px; border-radius:12px;
+         max-width:500px; margin:auto; color:#eee;
+         border-left:3px solid #00C851; }
+  button { background:#00C851; color:#000; border:none;
+           padding:10px 24px; border-radius:8px; cursor:pointer; }
+&lt;/style&gt;`);
+}
+
+/* ─────────────────────────────────────────────
+   IMAGE RESPONSE
+───────────────────────────────────────────── */
+function responseImagePro(input) {
+  const p = getImagePrompt(input);
+  return `<p>Prompt generato per <span class="hl-purple">Midjourney v6 / DALL-E 3 / Stable Diffusion XL</span> — alta qualità e fotorealismo:</p>
+  ${makePromptBox(p.title, p.prompt)}
+  <p style="margin-top:10px; color:var(--text-muted); font-size:13px;">
+    💡 Puoi incollarlo direttamente su Midjourney con <code>/imagine</code>, su DALL-E 3 su ChatGPT Plus, o su <a href="https://stability.ai" target="_blank" style="color:var(--purple)">Stable Diffusion</a>.
+  </p>`;
+}
+
+/* ─────────────────────────────────────────────
+   MASTER RESPONSE ROUTER
+───────────────────────────────────────────── */
+function generateResponse(input, model, lang) {
+  const intent = detectIntent(input);
+
+  let raw;
+  switch(model) {
+    case 'pro35':     raw = responsePro35(input, lang, intent); break;
+    case 'pro':       raw = responsePro(input, lang, intent);   break;
+    case 'classic':   raw = responseClassic(input, intent);      break;
+    case 'lite':      raw = responseLite(input, intent);         break;
+    case 'gpt-temu':  raw = responseTemu(input, intent);         break;
+    default:          raw = pick(db.general.it);
+  }
+
+  // Applica highlighter solo a testi non-HTML (evita di rompere i code block)
+  if (model !== 'gpt-temu' && model !== 'lite') {
+    // Applica highlight solo alla parte testo, non dentro i tag
+    raw = applyHighlighter(raw);
+  }
+
+  return raw;
+}
+
+</script>
+</body>
+</html>
